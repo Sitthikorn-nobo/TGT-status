@@ -17,7 +17,7 @@ const manifest = {
   name: "GA Status Tracker",
   short_name: "GA Tracker",
   description: "ระบบติดตามสถานะงาน",
-  start_url: "https://sitthikorn-nobo.github.io/TGT-status/",
+  start_url: ".",
   display: "standalone",
   background_color: "#E3F2FD",
   theme_color: "#1565C0",
@@ -305,7 +305,6 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js"></script>
 
 <script>
 // ===== Firebase Config =====
@@ -536,80 +535,6 @@ function renderTimeline(it) {
     return `<div class="tl-item"><div class="tl-dot nd">✎</div><div class="tl-body"><div class="tl-text">${esc(l.text)}${isLatest?' <span class="tl-new">ล่าสุด</span>':''}</div><div class="tl-foot"><span class="tl-time">${l.time}</span><button class="btn-tl-del" onclick="delNote(${l.id})">ลบ</button></div></div></div>`;
   }).join('');
 }
-
-
-// ===== Push Notification (Simple & Reliable) =====
-let swReg = null;
-let notifReady = false;
-let isFirstLoad = true;
-
-async function setupNotifications() {
-  if (!('serviceWorker' in navigator) || !('Notification' in window)) return;
-  try {
-    swReg = await navigator.serviceWorker.register('./sw.js');
-    const perm = await Notification.requestPermission();
-    notifReady = perm === 'granted';
-    console.log('Notification:', perm);
-  } catch(e) { console.log('SW error:', e); }
-}
-
-function notify(title, body) {
-  if (!notifReady || !swReg) return;
-  swReg.showNotification(title, {
-    body: body,
-    icon: 'https://sitthikorn-nobo.github.io/TGT-status/icon-192.png',
-    vibrate: [200, 100, 200],
-    tag: 'new-task-' + Date.now(),
-    requireInteraction: false
-  });
-}
-
-function initNotifListener() {
-  itemsRef.on('child_added', snap => {
-    if (isFirstLoad) return;
-    const it = snap.val();
-    notify('🔔 มีงานใหม่!', '📌 ' + it.title + '
-👤 ' + (it.assignee || 'ไม่ระบุ'));
-  });
-  itemsRef.once('value', () => { isFirstLoad = false; });
-}
-
-window.addEventListener('load', () => {
-  setupNotifications();
-  initNotifListener();
-});
-    if (fcmToken) {
-      console.log('FCM Token:', fcmToken);
-      // เก็บ token ไว้ใน Firebase
-      await firebase.database().ref('fcm_tokens/' + fcmToken.slice(-20)).set({
-        token: fcmToken,
-        time: new Date().toISOString()
-      });
-    }
-  } catch(e) { console.log('FCM token error:', e); }
-}
-
-function showLocalNotification(title, body) {
-  if (Notification.permission === 'granted' && swRegistration) {
-    swRegistration.showNotification(title, {
-      body: body,
-      icon: '/TGT-status/icon-192.png',
-      badge: '/TGT-status/icon-192.png',
-      vibrate: [200, 100, 200],
-      tag: 'new-task',
-      renotify: true
-    });
-  }
-}
-
-  itemsRef.once('value', () => { isFirstLoad = false; });
-}
-
-window.addEventListener('load', async () => {
-  await initSW();
-  initNotifListener();
-});
-
 </script>
 </body>
 </html>
