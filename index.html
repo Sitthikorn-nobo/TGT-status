@@ -536,62 +536,76 @@ function renderTimeline(it) {
   }).join('');
 }
 
-// ===== Service Worker + Push Notification =====
+
+// ===== FCM Push Notification =====
+const VAPID_KEY = 'BPcFsudWDai-CpvQmlQggFF4iXi6U-4tkPi6Jq06uwef0T2ne4Ia7dR1AMzdSKqTURkDNBORc2ex88seMJgyPlg';
 let swRegistration = null;
-let notifGranted = false;
+let fcmToken = null;
 
 async function initSW() {
   if (!('serviceWorker' in navigator)) return;
   try {
     swRegistration = await navigator.serviceWorker.register('./sw.js');
-    console.log('SW registered');
-  } catch(e) { console.log('SW failed', e); }
+    console.log('SW registered:', swRegistration);
+    await requestNotifPermission();
+  } catch(e) { console.log('SW failed:', e); }
 }
 
 async function requestNotifPermission() {
   if (!('Notification' in window)) return;
-  if (Notification.permission === 'granted') { notifGranted = true; return; }
-  if (Notification.permission === 'denied') return;
-  const result = await Notification.requestPermission();
-  notifGranted = result === 'granted';
-}
-
-function sendNotification(title, body) {
-  if (!notifGranted) return;
-  if (swRegistration) {
-    swRegistration.active?.postMessage({ type: 'SHOW_NOTIFICATION', title, body });
-  } else if (Notification.permission === 'granted') {
-    new Notification(title, { body, icon: '/TGT-status/icon-192.png' });
+  const permission = await Notification.requestPermission();
+  if (permission === 'granted') {
+    console.log('Notification permission granted');
+    await getFCMToken();
   }
 }
 
-// ===== Firebase listener สำหรับแจ้งเตือน =====
+async function getFCMToken() {
+  try {
+    const messaging = firebase.messaging();
+    fcmToken = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: swRegistration });
+    if (fcmToken) {
+      console.log('FCM Token:', fcmToken);
+      // เก็บ token ไว้ใน Firebase
+      await firebase.database().ref('fcm_tokens/' + fcmToken.slice(-20)).set({
+        token: fcmToken,
+        time: new Date().toISOString()
+      });
+    }
+  } catch(e) { console.log('FCM token error:', e); }
+}
+
+function showLocalNotification(title, body) {
+  if (Notification.permission === 'granted' && swRegistration) {
+    swRegistration.showNotification(title, {
+      body: body,
+      icon: '/TGT-status/icon-192.png',
+      badge: '/TGT-status/icon-192.png',
+      vibrate: [200, 100, 200],
+      tag: 'new-task',
+      renotify: true
+    });
+  }
+}
+
+// ===== ตรวจจับหัวข้อใหม่ =====
 let isFirstLoad = true;
-let knownIds = new Set();
 
 function initNotifListener() {
   itemsRef.on('child_added', snap => {
-    const id = snap.key;
-    if (isFirstLoad) {
-      knownIds.add(id);
-      return;
-    }
-    // มีคนเพิ่มหัวข้อใหม่
+    if (isFirstLoad) return;
     const it = snap.val();
-    sendNotification(
-      '🔔 งานใหม่เข้ามา!',
-      `📌 ${it.title}\n👤 ${it.assignee || 'ไม่ระบุ'}`
+    showLocalNotification(
+      '🔔 มีงานใหม่เข้ามา!',
+      `📌 ${it.title}
+👤 ${it.assignee || 'ไม่ระบุ'}`
     );
   });
-
-  // หลังโหลดครั้งแรกเสร็จ
   itemsRef.once('value', () => { isFirstLoad = false; });
 }
 
-// Init ทุกอย่าง
 window.addEventListener('load', async () => {
   await initSW();
-  await requestNotifPermission();
   initNotifListener();
 });
 
