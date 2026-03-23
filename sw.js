@@ -1,20 +1,29 @@
-// Service Worker for GA Status Tracker Push Notifications
-self.addEventListener('install', e => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+importScripts('https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js');
 
-// รับ push notification จาก Firebase
-self.addEventListener('push', e => {
-  const data = e.data ? e.data.json() : {};
-  const title = data.title || '🔔 GA Status Tracker';
-  const options = {
-    body: data.body || 'มีการอัปเดตใหม่',
-    icon: data.icon || '/TGT-status/icon-192.png',
-    badge: data.icon || '/TGT-status/icon-192.png',
-    data: { url: data.url || 'https://sitthikorn-nobo.github.io/TGT-status/' },
+firebase.initializeApp({
+  apiKey: "AIzaSyAEafNEvzFs1p_iptcPvhujggH30nkcSM8",
+  authDomain: "tgt-status.firebaseapp.com",
+  databaseURL: "https://tgt-status-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "tgt-status",
+  storageBucket: "tgt-status.firebasestorage.app",
+  messagingSenderId: "148559930953",
+  appId: "1:148559930953:web:65cc5ea0c6ecc7811e8198"
+});
+
+const messaging = firebase.messaging();
+
+// รับ background notification
+messaging.onBackgroundMessage(payload => {
+  const { title, body } = payload.notification || {};
+  self.registration.showNotification(title || '🔔 GA Status Tracker', {
+    body: body || 'มีการอัปเดตใหม่',
+    icon: '/TGT-status/icon-192.png',
+    badge: '/TGT-status/icon-192.png',
     vibrate: [200, 100, 200],
-    requireInteraction: false
-  };
-  e.waitUntil(self.registration.showNotification(title, options));
+    tag: 'new-task',
+    renotify: true
+  });
 });
 
 // กดที่ notification → เปิดแอป
@@ -22,24 +31,10 @@ self.addEventListener('notificationclick', e => {
   e.notification.close();
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-      for (const client of list) {
-        if (client.url.includes('TGT-status') && 'focus' in client) return client.focus();
+      for (const c of list) {
+        if (c.url.includes('TGT-status') && 'focus' in c) return c.focus();
       }
-      if (clients.openWindow) return clients.openWindow(e.notification.data.url);
+      return clients.openWindow('https://sitthikorn-nobo.github.io/TGT-status/');
     })
   );
-});
-
-// รับ message จาก main app → แสดง notification
-self.addEventListener('message', e => {
-  if (e.data && e.data.type === 'SHOW_NOTIFICATION') {
-    const { title, body, icon } = e.data;
-    self.registration.showNotification(title, {
-      body,
-      icon: icon || '/TGT-status/icon-192.png',
-      badge: icon || '/TGT-status/icon-192.png',
-      vibrate: [200, 100, 200],
-      requireInteraction: false
-    });
-  }
 });
