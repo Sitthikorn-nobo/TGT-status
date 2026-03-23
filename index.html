@@ -17,7 +17,7 @@ const manifest = {
   name: "GA Status Tracker",
   short_name: "GA Tracker",
   description: "ระบบติดตามสถานะงาน",
-  start_url: "/TGT-status/",
+  start_url: "https://sitthikorn-nobo.github.io/TGT-status/",
   display: "standalone",
   background_color: "#E3F2FD",
   theme_color: "#1565C0",
@@ -538,33 +538,46 @@ function renderTimeline(it) {
 }
 
 
-// ===== FCM Push Notification =====
-const VAPID_KEY = 'BPcFsudWDai-CpvQmlQggFF4iXi6U-4tkPi6Jq06uwef0T2ne4Ia7dR1AMzdSKqTURkDNBORc2ex88seMJgyPlg';
-let swRegistration = null;
-let fcmToken = null;
+// ===== Push Notification (Simple & Reliable) =====
+let swReg = null;
+let notifReady = false;
+let isFirstLoad = true;
 
-async function initSW() {
-  if (!('serviceWorker' in navigator)) return;
+async function setupNotifications() {
+  if (!('serviceWorker' in navigator) || !('Notification' in window)) return;
   try {
-    swRegistration = await navigator.serviceWorker.register('./sw.js');
-    console.log('SW registered:', swRegistration);
-    await requestNotifPermission();
-  } catch(e) { console.log('SW failed:', e); }
+    swReg = await navigator.serviceWorker.register('./sw.js');
+    const perm = await Notification.requestPermission();
+    notifReady = perm === 'granted';
+    console.log('Notification:', perm);
+  } catch(e) { console.log('SW error:', e); }
 }
 
-async function requestNotifPermission() {
-  if (!('Notification' in window)) return;
-  const permission = await Notification.requestPermission();
-  if (permission === 'granted') {
-    console.log('Notification permission granted');
-    await getFCMToken();
-  }
+function notify(title, body) {
+  if (!notifReady || !swReg) return;
+  swReg.showNotification(title, {
+    body: body,
+    icon: 'https://sitthikorn-nobo.github.io/TGT-status/icon-192.png',
+    vibrate: [200, 100, 200],
+    tag: 'new-task-' + Date.now(),
+    requireInteraction: false
+  });
 }
 
-async function getFCMToken() {
-  try {
-    const messaging = firebase.messaging();
-    fcmToken = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: swRegistration });
+function initNotifListener() {
+  itemsRef.on('child_added', snap => {
+    if (isFirstLoad) return;
+    const it = snap.val();
+    notify('🔔 มีงานใหม่!', '📌 ' + it.title + '
+👤 ' + (it.assignee || 'ไม่ระบุ'));
+  });
+  itemsRef.once('value', () => { isFirstLoad = false; });
+}
+
+window.addEventListener('load', () => {
+  setupNotifications();
+  initNotifListener();
+});
     if (fcmToken) {
       console.log('FCM Token:', fcmToken);
       // เก็บ token ไว้ใน Firebase
@@ -589,19 +602,6 @@ function showLocalNotification(title, body) {
   }
 }
 
-// ===== ตรวจจับหัวข้อใหม่ =====
-let isFirstLoad = true;
-
-function initNotifListener() {
-  itemsRef.on('child_added', snap => {
-    if (isFirstLoad) return;
-    const it = snap.val();
-    showLocalNotification(
-      '🔔 มีงานใหม่เข้ามา!',
-      `📌 ${it.title}
-👤 ${it.assignee || 'ไม่ระบุ'}`
-    );
-  });
   itemsRef.once('value', () => { isFirstLoad = false; });
 }
 
