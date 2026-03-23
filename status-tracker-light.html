@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TGT Status Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Sarabun:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --blue:#1565C0;--blue2:#1976D2;--blue3:#42A5F5;
+  --orange:#E65100;--orange2:#F57C00;
+  --surface:rgba(255,255,255,0.95);
+  --surface2:rgba(255,255,255,0.88);
+  --surface3:rgba(240,247,255,0.95);
+  --text:#0D2744;--text2:#37474F;--text3:#78909C;
+  --border:rgba(21,101,192,0.18);--border2:rgba(21,101,192,0.35);
+  --shadow:0 2px 16px rgba(13,39,90,0.13);
+  --radius:12px;--radius-sm:8px;
+}
+body{font-family:'Sarabun',sans-serif;min-height:100vh;color:var(--text);}
+button{font-family:'Sarabun',sans-serif;cursor:pointer;}
+input,textarea,select{font-family:'Sarabun',sans-serif;}
+
+/* BG */
+.bg-fixed{
+  position:fixed;inset:0;z-index:0;
+  background-image:url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Above_Gotham.jpg/1280px-Above_Gotham.jpg');
+  background-size:cover;background-position:center;
+}
+.bg-overlay{position:absolute;inset:0;background:linear-gradient(160deg,rgba(227,242,255,0.82) 0%,rgba(187,222,251,0.75) 50%,rgba(200,230,255,0.82) 100%);}
+
+/* pages */
+.page{display:none;flex-direction:column;min-height:100vh;position:relative;z-index:1;animation:fadeIn .25s ease;}
+.page.active{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* topbar */
+.topbar{
+  height:56px;padding:0 18px;
+  display:flex;align-items:center;gap:10px;
+  position:sticky;top:0;z-index:20;
+  background:rgba(255,255,255,0.88);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(21,101,192,0.15);
+  box-shadow:0 1px 8px rgba(13,39,90,0.08);
+}
+.brand-dot{
+  width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,var(--blue),var(--blue3));
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;color:#fff;
+  box-shadow:0 2px 8px rgba(21,101,192,0.3);
+}
+.brand-name{font-family:'Kanit',sans-serif;font-size:16px;font-weight:600;color:var(--blue);flex:1;}
+.btn-back{
+  background:var(--surface3);border:1px solid var(--border2);
+  color:var(--blue);border-radius:var(--radius-sm);
+  padding:6px 14px;font-size:13px;display:flex;align-items:center;gap:5px;
+  transition:all .15s;
+}
+.btn-back:hover{background:var(--blue);color:#fff;}
+
+/* main */
+.main{max-width:700px;margin:0 auto;padding:20px 16px;width:100%;}
+
+/* add box */
+.add-box{
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);padding:16px;margin-bottom:16px;
+  box-shadow:var(--shadow);
+}
+.add-row{display:flex;gap:8px;}
+.add-input{
+  flex:1;background:#F0F7FF;
+  border:1.5px solid var(--border2);border-radius:var(--radius-sm);
+  padding:10px 14px;font-size:14px;color:var(--text);outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+.add-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,101,192,0.1);}
+.add-input::placeholder{color:var(--text3);}
+.btn-add{
+  background:linear-gradient(135deg,var(--blue),var(--blue2));
+  color:#fff;border:none;border-radius:var(--radius-sm);
+  padding:10px 20px;font-size:14px;font-weight:500;
+  white-space:nowrap;transition:all .2s;
+  box-shadow:0 2px 8px rgba(21,101,192,0.25);
+}
+.btn-add:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(21,101,192,0.35);}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px;}
+.stat{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:13px 10px;text-align:center;
+  box-shadow:var(--shadow);transition:transform .15s;
+}
+.stat:hover{transform:translateY(-2px);}
+.stat-num{font-family:'Kanit',sans-serif;font-size:22px;font-weight:600;}
+.stat-label{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* filters */
+.filters{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap;}
+.ftab{
+  padding:6px 14px;border-radius:99px;font-size:13px;
+  border:1.5px solid var(--border2);
+  background:var(--surface2);color:var(--text2);
+  transition:all .15s;
+}
+.ftab:hover{border-color:var(--blue);color:var(--blue);}
+.ftab.on{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:500;}
+.ftab.hist{border-color:#9E9E9E;color:#616161;}
+.ftab.hist.on{background:#546E7A;border-color:#546E7A;color:#fff;}
+.hist-badge{background:#EF5350;color:#fff;border-radius:99px;padding:1px 6px;font-size:10px;font-weight:600;margin-left:4px;}
+
+/* cards */
+.items{display:flex;flex-direction:column;gap:8px;}
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:13px 16px;
+  display:flex;align-items:center;gap:12px;cursor:pointer;
+  box-shadow:var(--shadow);transition:all .2s;
+  border-left:3px solid transparent;
+}
+.card:hover{border-left-color:var(--blue);box-shadow:0 4px 18px rgba(13,39,90,0.12);transform:translateX(3px);}
+.card-info{flex:1;min-width:0;}
+.card-row{display:flex;align-items:baseline;gap:5px;margin-bottom:3px;}
+.card-lbl{font-size:10px;font-weight:600;color:#90A4AE;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;min-width:46px;}
+.card-title{font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card-meta-val{font-size:12px;color:var(--text2);}
+.card-preview-val{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic;}
+.nc{background:#E3F2FD;color:var(--blue);border-radius:99px;padding:1px 8px;font-size:11px;font-weight:500;}
+.badge{padding:4px 11px;border-radius:99px;font-size:12px;font-weight:500;white-space:nowrap;}
+.b-w{background:#FFF3E0;color:#BF360C;}
+.b-d{background:#E3F2FD;color:#0D47A1;}
+.b-dn{background:#E8F5E9;color:#1B5E20;}
+.btn-del{background:none;border:none;color:var(--text3);font-size:15px;padding:4px;line-height:1;border-radius:4px;transition:color .15s;opacity:0;}
+.card:hover .btn-del{opacity:1;}
+.btn-del:hover{color:#D32F2F;}
+.arrow{color:var(--text3);font-size:18px;transition:color .15s;}
+.card:hover .arrow{color:var(--blue);}
+.card-done{border-left-color:#66BB6A !important;opacity:.85;}
+.card-done .card-title{color:var(--text3);}
+.empty{text-align:center;color:var(--text3);padding:44px;font-size:14px;}
+.empty-icon{font-size:30px;display:block;margin-bottom:8px;opacity:.5;}
+
+/* detail */
+.detail-wrap{max-width:660px;margin:0 auto;padding:20px 16px;width:100%;}
+.detail-header{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--radius);padding:20px;margin-bottom:14px;
+  box-shadow:var(--shadow);
+  border-top:3px solid var(--blue);
+}
+.detail-title{font-family:'Kanit',sans-serif;font-size:18px;font-weight:500;margin-bottom:16px;color:var(--text);}
+.sec-label{font-size:11px;font-weight:600;color:var(--text3);margin-bottom:10px;letter-spacing:.06em;text-transform:uppercase;}
+.status-tabs{display:flex;gap:8px;flex-wrap:wrap;}
+.stab{
+  padding:8px 18px;border-radius:99px;font-size:13px;
+  border:1.5px solid var(--border2);background:var(--surface3);color:var(--text2);
+  transition:all .15s;
+}
+.stab:hover{border-color:var(--blue);color:var(--blue);}
+.stab.sw.on{background:#FFF3E0;color:#BF360C;border-color:#FFAB40;font-weight:500;}
+.stab.sd.on{background:#E3F2FD;color:#0D47A1;border-color:#64B5F6;font-weight:500;}
+.stab.sdn.on{background:#E8F5E9;color:#1B5E20;border-color:#66BB6A;font-weight:500;}
+
+.note-box,.tl-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px;margin-bottom:12px;
+  box-shadow:var(--shadow);
+}
+.note-box textarea{
+  width:100%;background:#F0F7FF;
+  border:1.5px solid var(--border2);border-radius:var(--radius-sm);
+  padding:10px 13px;font-size:13px;color:var(--text);
+  resize:vertical;min-height:80px;outline:none;
+  transition:border-color .2s;line-height:1.6;
+}
+.note-box textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,101,192,0.08);}
+.note-box textarea::placeholder{color:var(--text3);}
+.note-btn-row{display:flex;justify-content:flex-end;margin-top:9px;}
+.btn-note{
+  background:linear-gradient(135deg,var(--blue),var(--blue2));
+  color:#fff;border:none;border-radius:var(--radius-sm);
+  padding:8px 20px;font-size:13px;font-weight:500;
+  transition:all .2s;box-shadow:0 2px 8px rgba(21,101,192,0.2);
+}
+.btn-note:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(21,101,192,0.3);}
+
+/* timeline */
+.tl{display:flex;flex-direction:column;}
+.tl-item{display:flex;gap:11px;padding-bottom:14px;position:relative;}
+.tl-item:not(:last-child)::before{content:'';position:absolute;left:14px;top:28px;bottom:0;width:1px;background:var(--border);}
+.tl-dot{
+  width:28px;height:28px;border-radius:50%;
+  background:#E3F2FD;border:1.5px solid #90CAF9;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:12px;color:var(--blue);
+}
+.tl-dot.nd{background:#E3F2FD;border-color:#64B5F6;}
+.tl-dot.sd{background:#E8F5E9;border-color:#81C784;}
+.tl-body{flex:1;padding-top:3px;}
+.tl-text{
+  font-size:13px;line-height:1.55;background:#F0F7FF;
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:8px 12px;white-space:pre-wrap;word-break:break-word;color:var(--text);
+}
+.tl-text.sc{background:#E8F5E9;color:#1B5E20;border-color:#A5D6A7;font-size:12px;padding:5px 10px;}
+.tl-text.cr{color:var(--text3);font-size:12px;padding:5px 10px;background:transparent;border-color:transparent;font-style:italic;}
+.tl-foot{display:flex;align-items:center;gap:5px;margin-top:4px;}
+.tl-time{font-size:11px;color:var(--text3);}
+.tl-new{background:#E3F2FD;color:var(--blue);font-size:10px;padding:2px 7px;border-radius:99px;font-weight:600;}
+.btn-tl-del{background:none;border:none;color:var(--text3);font-size:11px;padding:1px 4px;border-radius:3px;cursor:pointer;transition:color .15s;}
+.btn-tl-del:hover{color:#D32F2F;}
+
+/* toast */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:var(--blue);color:#fff;
+  padding:10px 22px;border-radius:99px;font-size:13px;
+  display:none;z-index:99;white-space:nowrap;
+  box-shadow:0 4px 18px rgba(21,101,192,0.35);
+}
+</style>
+</head>
+<body>
+
+<!-- BG -->
+<div class="bg-fixed">
+  <div class="bg-overlay"></div>
+</div>
+
+<!-- LIST PAGE -->
+<div class="page active" id="page-list">
+  <div class="topbar">
+    <div class="brand-dot">📋</div>
+    <span class="brand-name">Status Tracker</span>
+  </div>
+  <div class="main">
+    <div class="add-box">
+      <div class="add-row">
+        <input class="add-input" type="text" id="inp" placeholder="พิมพ์หัวข้อแล้วกด Enter" onkeydown="if(event.key==='Enter')addItem()"/>
+        <button class="btn-add" onclick="addItem()">+ เพิ่ม</button>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-num" id="s-all" style="color:var(--blue)">0</div><div class="stat-label">งานอยู่ระหว่าง</div></div>
+      <div class="stat"><div class="stat-num" id="s-w" style="color:#E65100">0</div><div class="stat-label">รอดำเนินการ</div></div>
+      <div class="stat"><div class="stat-num" id="s-d" style="color:#1565C0">0</div><div class="stat-label">กำลังดำเนินการ</div></div>
+      <div class="stat"><div class="stat-num" id="s-dn" style="color:#2E7D32">0</div><div class="stat-label">เสร็จแล้ว</div></div>
+    </div>
+    <div class="filters">
+      <div class="ftab on" onclick="setFilter('active',this)">งานปัจจุบัน</div>
+      <div class="ftab" onclick="setFilter('รอดำเนินการ',this)">⏳ รอดำเนินการ</div>
+      <div class="ftab" onclick="setFilter('กำลังดำเนินการ',this)">🔄 กำลังดำเนินการ</div>
+      <div class="ftab hist" id="tab-hist" onclick="setFilter('done',this)">📁 ประวัติ <span class="hist-badge" id="hist-count" style="display:none">0</span></div>
+    </div>
+    <div class="items" id="list">
+      <div class="empty"><span class="empty-icon">📋</span>ยังไม่มีรายการ เพิ่มหัวข้อแรกได้เลยครับ</div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL PAGE -->
+<div class="page" id="page-detail">
+  <div class="topbar">
+    <button class="btn-back" onclick="goBack()">← กลับ</button>
+  </div>
+  <div class="detail-wrap">
+    <div class="detail-header">
+      <div class="detail-title" id="d-title"></div>
+      <div class="sec-label">Status</div>
+      <div class="status-tabs">
+        <div class="stab sw" onclick="changeStatus('รอดำเนินการ',this)">⏳ รอดำเนินการ</div>
+        <div class="stab sd" onclick="changeStatus('กำลังดำเนินการ',this)">🔄 กำลังดำเนินการ</div>
+        <div class="stab sdn" onclick="changeStatus('เสร็จแล้ว',this)">✅ เสร็จแล้ว</div>
+      </div>
+    </div>
+    <div class="note-box">
+      <div class="sec-label">เพิ่ม note / ความคืบหน้า</div>
+      <textarea id="d-note" placeholder="เขียน note หรืออัปเดตความคืบหน้า..."></textarea>
+      <div class="note-btn-row"><button class="btn-note" onclick="addNote()">บันทึก note</button></div>
+    </div>
+    <div class="tl-box">
+      <div class="sec-label">ประวัติการอัปเดต</div>
+      <div class="tl" id="d-tl"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let items=[];
+let curFilter='active';
+let activeId=null;
+const KEY='tgt-tracker-v1';
+
+function load(){
+  try{const r=localStorage.getItem(KEY);items=r?JSON.parse(r):[];}
+  catch(e){items=[];}
+  render();
+}
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(items));}catch(e){}
+}
+function nowStr(){
+  return new Date().toLocaleString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function goBack(){
+  document.getElementById('page-detail').classList.remove('active');
+  document.getElementById('page-list').classList.add('active');
+  activeId=null;
+}
+function openDetail(id){
+  activeId=id;
+  const it=items.find(i=>i.id===id);
+  if(!it)return;
+  document.getElementById('d-title').textContent=it.title;
+  document.getElementById('d-note').value='';
+  document.querySelectorAll('.stab').forEach(t=>t.classList.remove('on'));
+  const m={'รอดำเนินการ':'.sw','กำลังดำเนินการ':'.sd','เสร็จแล้ว':'.sdn'};
+  document.querySelector(m[it.status])?.classList.add('on');
+  // hide note input if done
+  const noteBox=document.querySelector('.note-box');
+  noteBox.style.display=it.status==='เสร็จแล้ว'?'none':'block';
+  renderTimeline(it);
+  document.getElementById('page-list').classList.remove('active');
+  document.getElementById('page-detail').classList.add('active');
+  window.scrollTo(0,0);
+}
+function addItem(){
+  const inp=document.getElementById('inp');
+  const t=inp.value.trim();
+  if(!t)return;
+  const ts=Date.now();
+  items.unshift({id:ts,title:t,status:'รอดำเนินการ',updated:nowStr(),createdAt:ts,
+    logs:[{id:ts+1,type:'created',text:'สร้างหัวข้อนี้',time:nowStr(),ts:ts+1}]});
+  inp.value='';
+  save();render();toast('✅ เพิ่มหัวข้อสำเร็จ');
+}
+function changeStatus(ns,el){
+  const it=items.find(i=>i.id===activeId);
+  if(!it||ns===it.status)return;
+  const ts=Date.now();
+  it.logs.unshift({id:ts,type:'status',text:it.status+' → '+ns,time:nowStr(),ts});
+  it.status=ns;it.updated=nowStr();
+  document.querySelectorAll('.stab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  // hide note box when done
+  const noteBox=document.querySelector('.note-box');
+  noteBox.style.display=ns==='เสร็จแล้ว'?'none':'block';
+  save();render();renderTimeline(it);
+  if(ns==='เสร็จแล้ว'){
+    toast('🎉 เสร็จแล้ว! ย้ายไปเก็บเป็นประวัติ');
+    setTimeout(()=>goBack(),1200);
+  } else {
+    toast('↕ อัปเดต status สำเร็จ');
+  }
+}
+function addNote(){
+  const ta=document.getElementById('d-note');
+  const text=ta.value.trim();
+  if(!text)return;
+  const it=items.find(i=>i.id===activeId);
+  if(!it)return;
+  const ts=Date.now();
+  it.logs.unshift({id:ts,type:'note',text,time:nowStr(),ts});
+  it.updated=nowStr();
+  ta.value='';
+  save();render();renderTimeline(it);toast('✎ บันทึก note แล้ว');
+}
+function delNote(logId){
+  const it=items.find(i=>i.id===activeId);
+  if(!it)return;
+  it.logs=it.logs.filter(l=>l.id!==logId);
+  save();render();renderTimeline(it);
+}
+function delItem(id){
+  if(!confirm('ลบรายการนี้?'))return;
+  items=items.filter(i=>i.id!==id);
+  save();render();toast('🗑 ลบรายการแล้ว');
+}
+function renderTimeline(it){
+  const tl=document.getElementById('d-tl');
+  if(!it.logs||!it.logs.length){tl.innerHTML='<div style="font-size:13px;color:#78909C">ยังไม่มีประวัติ</div>';return;}
+  const sorted=[...it.logs].sort((a,b)=>(b.ts||0)-(a.ts||0));
+  const latestNoteId=sorted.find(l=>l.type==='note')?.id;
+  tl.innerHTML=sorted.map(l=>{
+    if(l.type==='status')return`<div class="tl-item"><div class="tl-dot sd">↕</div><div class="tl-body"><div class="tl-text sc">เปลี่ยน status: ${esc(l.text)}</div><div class="tl-foot"><span class="tl-time">${l.time}</span></div></div></div>`;
+    if(l.type==='created')return`<div class="tl-item"><div class="tl-dot" style="font-size:11px">✦</div><div class="tl-body"><div class="tl-text cr">${esc(l.text)}</div><div class="tl-foot"><span class="tl-time">${l.time}</span></div></div></div>`;
+    const isLatest=l.id===latestNoteId;
+    return`<div class="tl-item"><div class="tl-dot nd">✎</div><div class="tl-body"><div class="tl-text">${esc(l.text)}${isLatest?' <span class="tl-new">ล่าสุด</span>':''}</div><div class="tl-foot"><span class="tl-time">${l.time}</span><button class="btn-tl-del" onclick="delNote(${l.id})">ลบ</button></div></div></div>`;
+  }).join('');
+}
+function setFilter(f,el){
+  curFilter=f;
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  render();
+}
+function badgeClass(s){
+  if(s==='รอดำเนินการ')return'b-w';
+  if(s==='กำลังดำเนินการ')return'b-d';
+  return'b-dn';
+}
+function render(){
+  const active=items.filter(i=>i.status!=='เสร็จแล้ว');
+  const done=items.filter(i=>i.status==='เสร็จแล้ว');
+  document.getElementById('s-all').textContent=active.length;
+  document.getElementById('s-w').textContent=items.filter(i=>i.status==='รอดำเนินการ').length;
+  document.getElementById('s-d').textContent=items.filter(i=>i.status==='กำลังดำเนินการ').length;
+  document.getElementById('s-dn').textContent=done.length;
+  // hist badge
+  const hc=document.getElementById('hist-count');
+  if(done.length>0){hc.style.display='inline';hc.textContent=done.length;}
+  else{hc.style.display='none';}
+
+  let filtered;
+  const isHist=curFilter==='done';
+  if(curFilter==='active')filtered=active;
+  else if(curFilter==='done')filtered=done;
+  else filtered=active.filter(i=>i.status===curFilter);
+
+  const list=document.getElementById('list');
+  if(!filtered.length){
+    list.innerHTML=isHist
+      ?'<div class="empty"><span class="empty-icon">📁</span>ยังไม่มีงานที่เสร็จแล้ว</div>'
+      :'<div class="empty"><span class="empty-icon">📋</span>ไม่มีรายการในหมวดนี้</div>';
+    return;
+  }
+  list.innerHTML=filtered.map(it=>{
+    const nc=(it.logs||[]).filter(l=>l.type==='note').length;
+    const ln=[...(it.logs||[])].filter(l=>l.type==='note').sort((a,b)=>(b.ts||0)-(a.ts||0))[0];
+    const isDone=it.status==='เสร็จแล้ว';
+    return`<div class="card ${isDone?'card-done':''}" onclick="openDetail(${it.id})">
+      <div class="card-info">
+        <div class="card-row"><span class="card-lbl">หัวข้อ</span><span class="card-title">${esc(it.title)}</span></div>
+        <div class="card-row"><span class="card-lbl">อัปเดต</span><span class="card-meta-val">${it.updated}${nc?` &nbsp;<span class="nc">✎ ${nc} note</span>`:''}${isDone?' &nbsp;<span style="background:#E8F5E9;color:#2E7D32;border-radius:99px;padding:1px 8px;font-size:11px">✅ เสร็จแล้ว</span>':''}</span></div>
+        ${ln?`<div class="card-row"><span class="card-lbl">Note</span><span class="card-preview-val">${esc(ln.text)}</span></div>`:''}
+      </div>
+      <span class="badge ${badgeClass(it.status)}">${it.status}</span>
+      <span class="arrow">›</span>
+      <button class="btn-del" onclick="event.stopPropagation();delItem(${it.id})">✕</button>
+    </div>`;
+  }).join('');
+}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.display='block';
+  clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',2500);
+}
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+load();
+</script>
+</body>
+</html>
