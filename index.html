@@ -51,14 +51,6 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
 .add-input{flex:1;background:#F0F7FF;border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;font-size:14px;color:var(--text);outline:none;transition:border-color .2s;}
 .add-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,101,192,0.08);}
 .add-input::placeholder{color:var(--text3);}
-.dept-selector{display:flex;gap:8px;margin-bottom:10px;}
-.dept-sel-btn{flex:1;padding:10px 8px;border-radius:var(--radius-sm);border:2px solid var(--border);font-size:13px;font-weight:500;transition:all .18s;background:var(--surface3);color:var(--text3);display:flex;flex-direction:column;align-items:center;gap:3px;}
-.dept-sel-btn .ds-icon{font-size:20px;}
-.dept-sel-btn .ds-label{font-size:12px;font-weight:700;letter-spacing:.04em;}
-.dept-sel-btn:hover{border-color:var(--border2);color:var(--text2);background:#E8F4FF;}
-.dept-sel-btn.sel-GA{background:var(--ga-light);border-color:var(--ga);color:var(--ga);}
-.dept-sel-btn.sel-SHE{background:var(--she-light);border-color:var(--she);color:var(--she);}
-.dept-sel-btn.sel-HR{background:var(--hr-light);border-color:var(--hr);color:var(--hr);}
 .btn-add{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 22px;font-size:14px;font-weight:500;white-space:nowrap;transition:all .2s;box-shadow:0 2px 8px rgba(21,101,192,0.2);}
 .btn-add:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(21,101,192,0.3);}
 .btn-add:disabled{background:#90A4AE;cursor:not-allowed;transform:none;box-shadow:none;}
@@ -66,7 +58,6 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
 .tstat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 10px;text-align:center;box-shadow:var(--shadow);}
 .tstat-num{font-family:'Kanit',sans-serif;font-size:22px;font-weight:600;}
 .tstat-lbl{font-size:10px;color:var(--text3);margin-top:2px;line-height:1.3;}
-.dept-section-label{font-size:11px;color:var(--text3);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;padding-left:2px;}
 .dept-cards{display:flex;flex-direction:column;gap:12px;}
 .dept-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:all .2s;}
 .dept-card:hover{box-shadow:0 6px 24px rgba(13,39,90,0.13);transform:translateY(-2px);}
@@ -179,7 +170,6 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
 </head>
 <body>
 
-<!-- OVERVIEW -->
 <div class="page active" id="page-overview">
   <div class="topbar">
     <span class="brand-name">Status Tracker</span>
@@ -190,23 +180,20 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
   </div>
   <div class="overview-wrap">
     <div class="add-box">
-      <div class="add-box-title">เพิ่มงานใหม่ — เลือกแผนก</div>
-      <div class="dept-selector">
-        <button class="dept-sel-btn" id="dsel-GA" onclick="selectDept('GA')">
-          <span class="ds-icon">🏢</span><span class="ds-label">GA</span>
-        </button>
-        <button class="dept-sel-btn" id="dsel-SHE" onclick="selectDept('SHE')">
-          <span class="ds-icon">🛡️</span><span class="ds-label">SHE</span>
-        </button>
-        <button class="dept-sel-btn" id="dsel-HR" onclick="selectDept('HR')">
-          <span class="ds-icon">👥</span><span class="ds-label">HR</span>
-        </button>
-      </div>
+      <div class="add-box-title">เพิ่มงานใหม่</div>
       <div class="add-row">
         <input class="add-input" type="text" id="inp" placeholder="หัวข้อ / ชื่องาน..." onkeydown="if(event.key==='Enter')document.getElementById('inp-assign').focus()"/>
       </div>
-      <div class="add-row">
-        <input class="add-input" type="text" id="inp-assign" placeholder="👤 ผู้รับผิดชอบ" onkeydown="if(event.key==='Enter')addItem()"/>
+      <div class="add-row" style="gap:8px;">
+        <input class="add-input" style="flex:2;" type="text" id="inp-assign" placeholder="👤 ผู้รับผิดชอบ" onkeydown="if(event.key==='Enter')addItem()"/>
+        
+        <select class="add-input" id="inp-dept" style="flex:1.2; cursor:pointer; background-color:#fff;" onchange="updateAddBtn()">
+          <option value="" disabled selected>🏢 เลือกแผนก</option>
+          <option value="GA">🏢 GA</option>
+          <option value="SHE">🛡️ SHE</option>
+          <option value="HR">👥 HR</option>
+        </select>
+
         <button class="btn-add" id="btn-add" onclick="addItem()" disabled>+ เพิ่ม</button>
       </div>
     </div>
@@ -220,7 +207,6 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
   </div>
 </div>
 
-<!-- DEPT -->
 <div class="page" id="page-dept">
   <div class="topbar">
     <button class="btn-back" onclick="goToDept(null)">← ภาพรวม</button>
@@ -246,7 +232,6 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
   </div>
 </div>
 
-<!-- DETAIL -->
 <div class="page" id="page-detail">
   <div class="topbar">
     <button class="btn-back" onclick="goBackFromDetail()">← กลับ</button>
@@ -287,7 +272,7 @@ firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 const itemsRef=db.ref('tracker/items');
 
-let items={},curDept=null,curFilter='active',activeId=null,selectedDept=null;
+let items={},curDept=null,curFilter='active',activeId=null;
 
 const DEPTS=[
   {key:'GA',icon:'🏢',label:'General Affairs'},
@@ -317,27 +302,31 @@ function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.
 
 function updateAddBtn(){
   const connected=document.getElementById('conn-dot').classList.contains('online');
-  document.getElementById('btn-add').disabled=!(selectedDept&&connected);
-}
-
-function selectDept(d){
-  selectedDept=d;
-  ['GA','SHE','HR'].forEach(k=>{
-    document.getElementById('dsel-'+k).className='dept-sel-btn'+(k===d?' sel-'+k:'');
-  });
-  updateAddBtn();
+  const deptInp = document.getElementById('inp-dept');
+  document.getElementById('btn-add').disabled=!(deptInp && deptInp.value && connected);
 }
 
 function addItem(){
   const inp=document.getElementById('inp');
   const assign=document.getElementById('inp-assign');
+  const deptInp = document.getElementById('inp-dept');
   const title=inp.value.trim();
   if(!title){inp.focus();return;}
-  if(!selectedDept){toast('⚠️ กรุณาเลือกแผนกก่อน');return;}
+  if(!deptInp.value){toast('⚠️ กรุณาเลือกแผนก');return;}
   const ts=Date.now();
-  itemsRef.push({title,assignee:assign.value.trim()||'ไม่ระบุ',dept:selectedDept,status:'กำลังดำเนินการ',updated:nowStr(),createdAt:ts,logs:{[ts]:{id:ts,type:'created',text:'สร้างหัวข้อนี้',time:nowStr(),ts}}}).then(()=>{
+  itemsRef.push({
+    title,
+    assignee:assign.value.trim()||'ไม่ระบุ',
+    dept:deptInp.value,
+    status:'กำลังดำเนินการ',
+    updated:nowStr(),
+    createdAt:ts,
+    logs:{[ts]:{id:ts,type:'created',text:'สร้างหัวข้อนี้',time:nowStr(),ts}}
+  }).then(()=>{
     inp.value='';assign.value='';
-    toast('✅ เพิ่มงานใน '+selectedDept+' สำเร็จ');
+    deptInp.selectedIndex = 0;
+    updateAddBtn();
+    toast('✅ เพิ่มงานสำเร็จ');
   }).catch(()=>toast('❌ เกิดข้อผิดพลาด'));
 }
 
@@ -360,7 +349,7 @@ function renderOverview(){
       <div class="dept-bar dept-bar-${dept.key}"></div>
       <div class="dept-card-header">
         <div class="dept-icon dept-icon-${dept.key}">${dept.icon}</div>
-        <div style="flex:1;"><div class="dept-name dept-name-${dept.key}">${dept.key}</div><div class="dept-total">${dept.label} · ${dActive.length} งาน items</div></div>
+        <div style="flex:1;"><div class="dept-name dept-name-${dept.key}">${dept.key}</div><div class="dept-total">${dept.label} · ${dActive.length} items</div></div>
         <div class="dept-arrow">›</div>
       </div>
       <div class="dept-card-stats">
