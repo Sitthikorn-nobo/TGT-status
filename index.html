@@ -421,28 +421,53 @@ function openDetail(id){
   pill.className='dept-pill dept-pill-'+it.dept;
   document.getElementById('detail-header').style.borderTopColor=it.dept==='GA'?'var(--ga)':it.dept==='SHE'?'var(--she)':'var(--hr)';
   document.getElementById('d-note').value='';
+
   const statusOrder=['กำลังดำเนินการ','รอรายงาน','เสร็จแล้ว'];
   const curIdx=statusOrder.indexOf(it.status);
+
   [{el:'stab-w',cls:'sw'},{el:'stab-d',cls:'sd'},{el:'stab-dn',cls:'sdn'}].forEach(({el,cls},i)=>{
-    const t=document.getElementById(el);t.className='stab '+cls;
-    if(i===curIdx)t.classList.add('on');
-    if(it.status==='เสร็จแล้ว'||i<curIdx){t.classList.add('disabled-tab');t.onclick=null;}
-    else{const s=statusOrder[i];t.onclick=function(){changeStatus(s,this);};}
+    const t=document.getElementById(el);
+    t.className='stab '+cls;
+    
+    if(i===curIdx) t.classList.add('on');
+
+    // ตรรกะใหม่: 
+    // 1. ถ้างาน "เสร็จแล้ว" ล็อกทุกปุ่ม
+    // 2. ถ้างานยังไม่เสร็จ ปุ่ม "กำลังดำเนินการ" และ "รอรายงาน" ต้องกดสลับไปมาได้
+    if(it.status==='เสร็จแล้ว'){
+      t.classList.add('disabled-tab');
+      t.onclick=null;
+    } else {
+      const s=statusOrder[i];
+      t.classList.remove('disabled-tab');
+      t.onclick=function(){changeStatus(s,this);};
+    }
   });
+
   document.getElementById('note-box').style.display=it.status==='เสร็จแล้ว'?'none':'block';
   renderTimeline(it);showPage('page-detail');
 }
-
 function goBackFromDetail(){activeId=null;showPage('page-dept');}
 
 function changeStatus(ns,el){
-  const it=items[activeId];if(!it||ns===it.status)return;
-  const statusOrder=['กำลังดำเนินการ','รอรายงาน','เสร็จแล้ว'];
-  if(statusOrder.indexOf(ns)<statusOrder.indexOf(it.status))return;
+  const it=items[activeId];
+  if(!it || ns===it.status) return;
+
+  // ตรรกะใหม่: ยอมให้เปลี่ยนสลับไปมาได้เสมอ ยกเว้นว่างานนั้นจบไปแล้ว (ซึ่งถูกดักไว้ที่ openDetail แล้ว)
   const ts=Date.now();
-  itemsRef.child(activeId).update({status:ns,updated:nowStr(),['logs/'+ts]:{id:ts,type:'status',text:it.status+' → '+ns,time:nowStr(),ts}}).then(()=>{
-    if(ns==='เสร็จแล้ว'){toast('🎉 เสร็จแล้ว!');setTimeout(()=>goBackFromDetail(),1200);}
-    else toast('↕ อัปเดต status สำเร็จ');
+  itemsRef.child(activeId).update({
+    status:ns,
+    updated:nowStr(),
+    ['logs/'+ts]:{id:ts,type:'status',text:it.status+' → '+ns,time:nowStr(),ts}
+  }).then(()=>{
+    if(ns==='เสร็จแล้ว'){
+      toast('🎉 เสร็จสิ้นภารกิจ!');
+      setTimeout(()=>goBackFromDetail(),1200);
+    } else {
+      toast('↕ อัปเดตสถานะเป็น: ' + ns);
+      // รีเฟรชหน้า Detail เพื่ออัปเดตปุ่ม On/Off
+      openDetail(activeId); 
+    }
   });
 }
 
