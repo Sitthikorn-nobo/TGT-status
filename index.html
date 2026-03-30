@@ -262,8 +262,8 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
     </div>
     <div class="filters">
       <div class="ftab on" onclick="setFilter('active',this)">งานปัจจุบัน</div>
-      <div class="ftab" onclick="setFilter('รอดำเนินการ',this)">กำลังดำเนินการ</div>
-      <div class="ftab" onclick="setFilter('กำลังดำเนินการ',this)">กำลังรายงาน</div>
+      <div class="ftab" onclick="setFilter('กำลังดำเนินการ',this)">กำลังดำเนินการ</div>
+      <div class="ftab" onclick="setFilter('กำลังรายงาน',this)">กำลังรายงาน</div>
       <div class="ftab hist" id="tab-hist" onclick="setFilter('done',this)">ประวัติ<span class="hist-badge" id="hist-count" style="display:none">0</span></div>
     </div>
     <div class="items" id="list">
@@ -283,8 +283,8 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
       <div style="margin-bottom:14px;"><span id="d-assignee" style="background:#E3F2FD;color:#1565C0;border-radius:99px;padding:3px 12px;font-size:13px;font-weight:600;"></span></div>
       <div class="sec-label">Status (เลือกได้ทางเดียว ไม่สามารถย้อนกลับได้)</div>
       <div class="status-tabs">
-        <div class="stab sw" onclick="changeStatus('รอดำเนินการ',this)">กำลังดำเนินการ</div>
-        <div class="stab sd" onclick="changeStatus('กำลังดำเนินการ',this)"> รอรายงาน</div>
+        <div class="stab sw" onclick="changeStatus('กำลังดำเนินการ',this)">กำลังดำเนินการ</div>
+        <div class="stab sd" onclick="changeStatus(' รอรายงาน',this)"> รอรายงาน</div>
         <div class="stab sdn" onclick="changeStatus('เสร็จแล้ว',this)">✅ เสร็จแล้ว</div>
       </div>
     </div>
@@ -350,8 +350,8 @@ function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 function badgeClass(s) {
-  if(s==='รอดำเนินการ') return 'b-w';
-  if(s==='กำลังดำเนินการ') return 'b-d';
+  if(s==='กำลังดำเนินการ') return 'b-w';
+  if(s==='รอรายงาน') return 'b-d';
   return 'b-dn';
 }
 function toast(msg) {
@@ -370,7 +370,7 @@ function addItem() {
   const newItem = {
     title,
     assignee: assign.value.trim() || 'ไม่ระบุ',
-    status: 'รอดำเนินการ',
+    status: 'กำลังดำเนินการ',
     updated: nowStr(),
     createdAt: ts,
     logs: {
