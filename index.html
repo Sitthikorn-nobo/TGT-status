@@ -135,44 +135,59 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
 .detail-title{font-family:'Kanit',sans-serif;font-size:20px;font-weight:600;margin-bottom:14px;color:var(--text);}
 .detail-meta{display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
 
-/* Stepper Progress Styles */
+/* Stepper Progress Styles (MODIFIED) */
 .stepper-wrapper {
   display: flex;
   justify-content: space-between;
   margin: 25px 0;
   position: relative;
-  padding: 0 10px;
+  padding: 0;
 }
+/* เส้นสีเทาด้านหลัง */
+.stepper-wrapper::after {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: #E0E0E0;
+  z-index: 0;
+  border-radius: 4px;
+}
+/* เส้นสีเขียวที่วิ่งตามสถานะ */
+.stepper-wrapper::before {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: 0;
+  width: var(--progress-width, 0%);
+  height: 4px;
+  background: #43A047;
+  z-index: 1;
+  border-radius: 4px;
+  transition: width 0.5s ease-in-out;
+}
+
 .stepper-item {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
-.stepper-item::before {
-  content: "";
-  position: absolute;
-  top: 15px;
-  left: -50%;
-  width: 100%;
-  height: 3px;
-  background: #E0E0E0;
-  z-index: -1;
-  transition: background 0.3s ease;
-}
-.stepper-item:first-child::before { content: none; }
 .step-counter {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: #E0E0E0;
+  background: #fff;
+  border: 3px solid #E0E0E0;
   display: flex;
   justify-content: center;
   align-items: center;
   font-weight: bold;
-  color: white;
+  color: #90A4AE;
   margin-bottom: 8px;
   transition: all 0.3s ease;
   font-size: 13px;
@@ -180,10 +195,9 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
 .step-name { font-size: 11px; color: var(--text3); font-weight: 500; text-align: center; }
 
 /* Active & Completed States */
-.stepper-item.active .step-counter { background: var(--blue); box-shadow: 0 0 0 4px rgba(21, 101, 192, 0.15); }
+.stepper-item.active .step-counter { border-color: var(--blue); color: var(--blue); transform: scale(1.1); background: #fff; }
 .stepper-item.active .step-name { color: var(--blue); font-weight: 600; }
-.stepper-item.completed .step-counter { background: #43A047; }
-.stepper-item.completed::before { background: #43A047; }
+.stepper-item.completed .step-counter { background: #43A047; border-color: #43A047; color: white; }
 .stepper-item.completed .step-name { color: #43A047; }
 
 .status-select-wrap { margin-top: 25px; }
@@ -215,7 +229,7 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
 .dept-pill-GA{background:var(--ga-light);color:var(--ga);}
 .dept-pill-SHE{background:var(--she-light);color:var(--she);}
 .dept-pill-HR{background:var(--hr-light);color:var(--hr);}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;padding:10px 22px;border-radius:99px;font-size:13px;display:none;z-index:99;box-shadow:0 4px 18px rgba(21,101,192,0.35);}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;padding:10px 22px;border-radius:99px;font-size:13px;display:none;z-index:99;white-space:nowrap;box-shadow:0 4px 18px rgba(21,101,192,0.35);}
 </style>
 </head>
 <body>
@@ -236,12 +250,14 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
       </div>
       <div class="add-row" style="gap:8px;">
         <input class="add-input" style="flex:2;" type="text" id="inp-assign" placeholder="👤 ผู้รับผิดชอบ" onkeydown="if(event.key==='Enter')addItem()"/>
+        
         <select class="add-input" id="inp-dept" style="flex:1.2; cursor:pointer; background-color:#fff;" onchange="updateAddBtn()">
           <option value="" disabled selected>🏢 เลือกแผนก</option>
           <option value="GA">🏢 GA</option>
           <option value="SHE">🛡️ SHE</option>
           <option value="HR">👥 HR</option>
         </select>
+
         <button class="btn-add" id="btn-add" onclick="addItem()" disabled>+ เพิ่ม</button>
       </div>
     </div>
@@ -293,18 +309,9 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
       </div>
 
       <div class="stepper-wrapper">
-        <div class="stepper-item" id="step-1">
-          <div class="step-counter">1</div>
-          <div class="step-name">กำลังดำเนินการ</div>
-        </div>
-        <div class="stepper-item" id="step-2">
-          <div class="step-counter">2</div>
-          <div class="step-name">รอรายงาน</div>
-        </div>
-        <div class="stepper-item" id="step-3">
-          <div class="step-counter">3</div>
-          <div class="step-name">เสร็จแล้ว</div>
-        </div>
+        <div class="stepper-item" id="step-1"><div class="step-counter">1</div><div class="step-name">กำลังดำเนินการ</div></div>
+        <div class="stepper-item" id="step-2"><div class="step-counter">2</div><div class="step-name">รอรายงาน</div></div>
+        <div class="stepper-item" id="step-3"><div class="step-counter">3</div><div class="step-name">เสร็จแล้ว</div></div>
       </div>
 
       <div class="status-select-wrap">
@@ -409,21 +416,12 @@ function renderOverview(){
   document.getElementById('dept-cards').innerHTML=DEPTS.map(dept=>{
     const dArr=arr.filter(i=>i.dept===dept.key);
     const dActive=dArr.filter(i=>i.status!=='เสร็จแล้ว');
-    const dW=dArr.filter(i=>i.status==='กำลังดำเนินการ').length;
-    const dD=dArr.filter(i=>i.status==='รอรายงาน').length;
-    const dDn=dArr.filter(i=>i.status==='เสร็จแล้ว').length;
     return `<div class="dept-card" onclick="goToDept('${dept.key}')">
       <div class="dept-bar dept-bar-${dept.key}"></div>
       <div class="dept-card-header">
         <div class="dept-icon dept-icon-${dept.key}">${dept.icon}</div>
         <div style="flex:1;"><div class="dept-name dept-name-${dept.key}">${dept.key}</div><div class="dept-total">${dept.label} · ${dActive.length} items</div></div>
         <div class="dept-arrow">›</div>
-      </div>
-      <div class="dept-card-stats">
-        ${dW?`<span class="dstat dstat-w"><span class="dstat-num">${dW}</span> กำลังดำเนินการ</span>`:''}
-        ${dD?`<span class="dstat dstat-d"><span class="dstat-num">${dD}</span> รอรายงาน</span>`:''}
-        ${dDn?`<span class="dstat dstat-dn"><span class="dstat-num">${dDn}</span> เสร็จแล้ว</span>`:''}
-        ${(!dW&&!dD&&!dDn)?`<span style="font-size:12px;color:#90A4AE;">ยังไม่มีงาน</span>`:''}
       </div>
     </div>`;
   }).join('');
@@ -489,14 +487,14 @@ function openDetail(id){
   document.getElementById('detail-header').style.borderTopColor=it.dept==='GA'?'var(--ga)':it.dept==='SHE'?'var(--she)':'var(--hr)';
   document.getElementById('d-note').value='';
 
-  // Update Status Dropdown & Stepper
   const statusSelect = document.getElementById('d-status-select');
   statusSelect.value = it.status;
   
   const statusOrder=['กำลังดำเนินการ','รอรายงาน','เสร็จแล้ว'];
   const curIdx=statusOrder.indexOf(it.status);
 
-  // Stepper logic
+  // Stepper UI & Progress Line Logic
+  const stepperWrapper = document.querySelector('.stepper-wrapper');
   statusOrder.forEach((s, i) => {
     const step = document.getElementById(`step-${i+1}`);
     step.classList.remove('active', 'completed');
@@ -504,9 +502,11 @@ function openDetail(id){
     else if (i === curIdx) step.classList.add('active');
   });
 
-  // Lock logic
-  statusSelect.disabled = (it.status === 'เสร็จแล้ว');
+  // คำนวณความยาวเส้นสีเขียว (0%, 50%, 100%)
+  const pWidth = curIdx === 0 ? 0 : curIdx === 1 ? 50 : 100;
+  stepperWrapper.style.setProperty('--progress-width', pWidth + '%');
 
+  statusSelect.disabled = (it.status === 'เสร็จแล้ว');
   document.getElementById('note-box').style.display=it.status==='เสร็จแล้ว'?'none':'block';
   renderTimeline(it);showPage('page-detail');
 }
@@ -516,11 +516,9 @@ function goBackFromDetail(){activeId=null;showPage('page-dept');}
 function changeStatus(ns){
   const it=items[activeId];
   if(!it || ns===it.status) return;
-
   const ts=Date.now();
   itemsRef.child(activeId).update({
-    status:ns,
-    updated:nowStr(),
+    status:ns, updated:nowStr(),
     ['logs/'+ts]:{id:ts,type:'status',text:it.status+' → '+ns,time:nowStr(),ts}
   }).then(()=>{
     if(ns==='เสร็จแล้ว'){
