@@ -228,8 +228,7 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
   display:none;z-index:99;white-space:nowrap;
   box-shadow:0 4px 18px rgba(21,101,192,0.35);
 }
-  /* สีประจำแผนก */
-.dept-tag {
+  .dept-tag {
   font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px;
   margin-right: 6px; color: #fff; text-transform: uppercase;
 }
@@ -237,7 +236,7 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
 .tag-SHE { background: #2E7D32; }
 .tag-HR { background: #C62828; }
 
-/* สีสถานะ "รอรายงาน" */
+/* สีสถานะรอรายงาน */
 .badge.b-rep { background: #FFF9C4; color: #F57F17; }
 .stab.srep.on { background: #FFF9C4; color: #F57F17; border-color: #FBC02D; font-weight: 500; }
 </style>
@@ -280,11 +279,16 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
 </div>
 
 <div class="filters">
-  <div class="ftab on" onclick="setFilter('active',this)">งานทั้งหมด</div>
+  <div class="ftab on" onclick="setFilter('active',this)">ทั้งหมด</div>
   <div class="ftab" onclick="setDeptFilter('GA',this)">🏢 GA</div>
   <div class="ftab" onclick="setDeptFilter('SHE',this)">🛡️ SHE</div>
   <div class="ftab" onclick="setDeptFilter('HR',this)">👥 HR</div>
   <div class="ftab hist" id="tab-hist" onclick="setFilter('done',this)">📁 ประวัติ <span class="hist-badge" id="hist-count" style="display:none">0</span></div>
+</div>
+    <div class="items" id="list">
+      <div class="loading">⏳ กำลังเชื่อมต่อ Firebase...</div>
+    </div>
+  </div>
 </div>
 
 <!-- DETAIL PAGE -->
@@ -379,58 +383,59 @@ function toast(msg) {
 function addItem() {
   const inp = document.getElementById('inp');
   const assign = document.getElementById('inp-assign');
-  const dept = document.getElementById('inp-dept'); // เพิ่มจุดนี้
+  const dept = document.getElementById('inp-dept');
   const title = inp.value.trim();
-  
-  if (!title) { inp.focus(); return; }
-  
+  if (!title) return;
+
   const ts = Date.now();
   const newItem = {
     title,
     assignee: assign.value.trim() || 'ไม่ระบุ',
-    dept: dept.value, // บันทึกแผนกที่เลือก
-    status: 'กำลังดำเนินการ', // เปลี่ยนจาก 'รอดำเนินการ'
+    dept: dept.value, // บันทึกแผนก
+    status: 'กำลังทำ', // เปลี่ยนจากรอดำเนินการ
     updated: nowStr(),
     createdAt: ts,
-    logs: {
-      [ts]: { id: ts, type: 'created', text: `สร้างงานในแผนก ${dept.value}`, time: nowStr(), ts }
-    }
+    logs: { [ts]: { id: ts, type: 'created', text: `สร้างงานแผนก ${dept.value}`, time: nowStr(), ts } }
   };
-  
   itemsRef.push(newItem).then(() => {
-    inp.value = '';
-    assign.value = '';
-    toast('✅ เพิ่มหัวข้อสำเร็จ');
-  });
+    inp.value = ''; assign.value = '';
+    toast('✅ เพิ่มงานสำเร็จ');
+  }).catch(() => toast('❌ เกิดข้อผิดพลาด'));
 }
 
-const statusOrder = ['กำลังดำเนินการ', 'รอรายงาน', 'เสร็จแล้ว'];
-
-// เปลี่ยนตัวแปรหลัก
-const statusOrder = ['กำลังดำเนินการ', 'รอรายงาน', 'เสร็จแล้ว'];
+function delItem(id) {
+  if (!confirm('ลบรายการนี้?')) return;
+  itemsRef.child(id).remove().then(() => toast('🗑 ลบรายการแล้ว'));
+}
+  function setDeptFilter(dept, el) {
+  curDept = dept;
+  curFilter = 'dept';
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+  render();
+}
 
 function openDetail(id) {
   activeId = id;
   const it = items[id];
   if (!it) return;
-  
-  // แสดงแผนกที่หัวข้อด้วย
-  document.getElementById('d-title').textContent = `[${it.dept || 'GA'}] ${it.title}`;
+  document.getElementById('d-title').textContent = it.title;
   document.getElementById('d-assignee').textContent = '👤 ' + (it.assignee || 'ไม่ระบุ');
   document.getElementById('d-note').value = '';
 
+  // one-way status: รอ → กำลัง → เสร็จ ย้อนกลับไม่ได้
+  const statusOrder = ['รอดำเนินการ','กำลังดำเนินการ','เสร็จแล้ว'];
   const curIdx = statusOrder.indexOf(it.status);
-  document.querySelectorAll('.stab').forEach((t, i) => {
-    t.classList.remove('on', 'disabled-tab');
+  document.querySelectorAll('.stab').forEach((t,i) => {
+    t.classList.remove('on','disabled-tab');
     if (i === curIdx) t.classList.add('on');
-    
-    // กฎ One-way: ห้ามกดสถานะที่ผ่านมาแล้ว และถ้าเสร็จสิ้นแล้วห้ามเปลี่ยน
+    // ปิดปุ่มที่ย้อนหลัง หรือเสร็จแล้วทั้งหมด
     if (it.status === 'เสร็จแล้ว' || i < curIdx) {
       t.classList.add('disabled-tab');
       t.onclick = null;
     } else {
       const s = statusOrder[i];
-      t.onclick = function() { changeStatus(s, this); };
+      t.onclick = function(){ changeStatus(s, this); };
     }
   });
 
@@ -441,29 +446,33 @@ function openDetail(id) {
   window.scrollTo(0, 0);
 }
 
+function goBack() {
+  activeId = null;
+  document.getElementById('page-detail').classList.remove('active');
+  document.getElementById('page-list').classList.add('active');
+}
+
 function changeStatus(ns, el) {
   const it = items[activeId];
   if (!it || ns === it.status) return;
-  
-  // เช็คเงื่อนไขห้ามย้อนกลับ
-  if (statusOrder.indexOf(ns) < statusOrder.indexOf(it.status)) return;
-
+  const statusOrder = ['รอดำเนินการ','กำลังดำเนินการ','เสร็จแล้ว'];
+  if (statusOrder.indexOf(ns) < statusOrder.indexOf(it.status)) return; // กันย้อนหลัง
   const ts = Date.now();
-  const log = { id: ts, type: 'status', text: `${it.status} → ${ns}`, time: nowStr(), ts };
-  
+  const log = { id: ts, type: 'status', text: it.status + ' → ' + ns, time: nowStr(), ts };
   itemsRef.child(activeId).update({
     status: ns,
     updated: nowStr(),
     ['logs/' + ts]: log
   }).then(() => {
     if (ns === 'เสร็จแล้ว') {
-      toast('🎉 รายงานสำเร็จ! จบงานเรียบร้อย');
+      toast('🎉 เสร็จแล้ว! ย้ายไปเก็บเป็นประวัติ');
       setTimeout(() => goBack(), 1200);
     } else {
-      toast('↕ อัปเดตเป็น: ' + ns);
+      toast('↕ อัปเดต status สำเร็จ');
     }
   });
 }
+
 function addNote() {
   const ta = document.getElementById('d-note');
   const text = ta.value.trim();
@@ -493,33 +502,37 @@ function setFilter(f, el) {
 // ===== Render =====
 function render() {
   const arr = Object.entries(items).map(([k, v]) => ({...v, _id: k}));
-  arr.sort((a, b) => (b.createdAt||0) - (a.createdAt||0));
+  arr.sort((a, b) => b.createdAt - a.createdAt);
 
-  const active = arr.filter(i => i.status !== 'เสร็จแล้ว');
-  const done = arr.filter(i => i.status === 'เสร็จแล้ว');
+  const active = arr.filter(i => i.status !== 'เสร็จสิ้น');
+  const done = arr.filter(i => i.status === 'เสร็จสิ้น');
 
+  // อัปเดตตัวเลข Stats บนหน้าจอ
   document.getElementById('s-all').textContent = active.length;
-  document.getElementById('s-w').textContent = arr.filter(i => i.status === 'รอดำเนินการ').length;
-  document.getElementById('s-d').textContent = arr.filter(i => i.status === 'กำลังดำเนินการ').length;
+  document.getElementById('s-d').textContent = arr.filter(i => i.status === 'กำลังทำ').length;
+  document.getElementById('s-rep').textContent = arr.filter(i => i.status === 'รอรายงาน').length;
   document.getElementById('s-dn').textContent = done.length;
-
-  const hc = document.getElementById('hist-count');
-  hc.style.display = done.length > 0 ? 'inline' : 'none';
-  hc.textContent = done.length;
 
   let filtered;
   if (curFilter === 'active') filtered = active;
   else if (curFilter === 'done') filtered = done;
+  else if (curFilter === 'dept') filtered = active.filter(i => i.dept === curDept);
   else filtered = active.filter(i => i.status === curFilter);
 
   const list = document.getElementById('list');
-  if (!filtered.length) {
-    list.innerHTML = curFilter === 'done'
-      ? '<div class="empty"><span class="empty-icon">📁</span>ยังไม่มีงานที่เสร็จแล้ว</div>'
-      : '<div class="empty"><span class="empty-icon">📋</span>ไม่มีรายการในหมวดนี้</div>';
-    return;
-  }
-
+  list.innerHTML = filtered.map(it => `
+    <div class="card" onclick="openDetail('${it._id}')">
+      <div class="card-info">
+        <div class="card-row">
+          <span class="dept-tag tag-${it.dept}">${it.dept || 'GA'}</span>
+          <span class="card-title">${esc(it.title)}</span>
+        </div>
+        <div class="card-row"><span class="card-lbl">รับผิดชอบ</span><span class="card-assignee-val">👤 ${esc(it.assignee)}</span></div>
+      </div>
+      <span class="badge ${it.status==='กำลังทำ'?'b-d':(it.status==='รอรายงาน'?'b-rep':'b-dn')}">${it.status}</span>
+    </div>
+  `).join('');
+}
   list.innerHTML = filtered.map(it => {
     const logs = it.logs ? Object.values(it.logs) : [];
     const nc = logs.filter(l => l.type === 'note').length;
@@ -551,62 +564,6 @@ function renderTimeline(it) {
     const isLatest = l.id === latestNoteId;
     return `<div class="tl-item"><div class="tl-dot nd">✎</div><div class="tl-body"><div class="tl-text">${esc(l.text)}${isLatest?' <span class="tl-new">ล่าสุด</span>':''}</div><div class="tl-foot"><span class="tl-time">${l.time}</span><button class="btn-tl-del" onclick="delNote(${l.id})">ลบ</button></div></div></div>`;
   }).join('');
-}
-
-  let curDept = 'ALL'; // เพิ่มตัวแปร global
-
-function setDeptFilter(dept, el) {
-  curDept = dept;
-  curFilter = 'dept'; // ใช้โหมดพิเศษสำหรับแผนก
-  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('on'));
-  el.classList.add('on');
-  render();
-}
-
-function render() {
-  const arr = Object.entries(items).map(([k, v]) => ({...v, _id: k}));
-  arr.sort((a, b) => (b.createdAt||0) - (a.createdAt||0));
-
-  const active = arr.filter(i => i.status !== 'เสร็จแล้ว');
-  const done = arr.filter(i => i.status === 'เสร็จแล้ว');
-
-  // อัปเดตตัวเลข Stats
-  document.getElementById('s-all').textContent = active.length;
-  document.getElementById('s-d').textContent = arr.filter(i => i.status === 'กำลังดำเนินการ').length;
-  // เพิ่มการนับ 'รอรายงาน' แทน 'รอดำเนินการ'
-  document.getElementById('s-w').textContent = arr.filter(i => i.status === 'รอรายงาน').length; 
-  document.getElementById('s-dn').textContent = done.length;
-
-  let filtered;
-  if (curFilter === 'active') filtered = active;
-  else if (curFilter === 'done') filtered = done;
-  else if (curFilter === 'dept') filtered = active.filter(i => i.dept === curDept); // กรองตามแผนก
-  else filtered = active.filter(i => i.status === curFilter);
-
-  const list = document.getElementById('list');
-  // ... (ส่วนแจ้งเตือน list เปล่าเหมือนเดิม)
-
-  list.innerHTML = filtered.map(it => {
-    // ... (ส่วนประมวลผล log เหมือนเดิม)
-    return `<div class="card ${it.status==='เสร็จแล้ว'?'card-done':''}" onclick="openDetail('${it._id}')">
-      <div class="card-info">
-        <div class="card-row">
-          <span class="dept-tag tag-${it.dept || 'GA'}">${it.dept || 'GA'}</span>
-          <span class="card-title">${esc(it.title)}</span>
-        </div>
-        <div class="card-row"><span class="card-lbl">รับผิดชอบ</span><span class="card-assignee-val">👤 ${esc(it.assignee)}</span></div>
-        <div class="card-row"><span class="card-lbl">อัปเดต</span><span class="card-meta-val">${it.updated}</span></div>
-      </div>
-      <span class="badge ${badgeClass(it.status)}">${it.status}</span>
-    </div>`;
-  }).join('');
-}
-
-// ปรับสี Badge ให้ตรงกับสถานะใหม่
-function badgeClass(s) {
-  if(s === 'กำลังดำเนินการ') return 'b-d';
-  if(s === 'รอรายงาน') return 'b-w'; // ใช้สีส้มเดิม
-  return 'b-dn';
 }
 </script>
 </body>
