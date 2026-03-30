@@ -182,7 +182,7 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
 <!-- OVERVIEW -->
 <div class="page active" id="page-overview">
   <div class="topbar">
-    <span class="brand-name">📋 Status Tracker</span>
+    <span class="brand-name"> Status Tracker</span>
     <div class="conn-wrap">
       <div class="conn-dot" id="conn-dot"></div>
       <span class="conn-label" id="conn-label">กำลังเชื่อมต่อ...</span>
@@ -193,13 +193,13 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
       <div class="add-box-title">เพิ่มงานใหม่ — เลือกแผนก</div>
       <div class="dept-selector">
         <button class="dept-sel-btn" id="dsel-GA" onclick="selectDept('GA')">
-          <span class="ds-icon">🏢</span><span class="ds-label">GA</span>
+          <span class="ds-icon"></span><span class="ds-label">GA</span>
         </button>
         <button class="dept-sel-btn" id="dsel-SHE" onclick="selectDept('SHE')">
-          <span class="ds-icon">🛡️</span><span class="ds-label">SHE</span>
+          <span class="ds-icon"></span><span class="ds-label">SHE</span>
         </button>
         <button class="dept-sel-btn" id="dsel-HR" onclick="selectDept('HR')">
-          <span class="ds-icon">👥</span><span class="ds-label">HR</span>
+          <span class="ds-icon"></span><span class="ds-label">HR</span>
         </button>
       </div>
       <div class="add-row">
@@ -291,9 +291,9 @@ const itemsRef=db.ref('tracker/items');
 let items={},curDept=null,curFilter='active',activeId=null,selectedDept=null;
 
 const DEPTS=[
-  {key:'GA',icon:'🏢',label:'General Affairs'},
-  {key:'SHE',icon:'🛡️',label:'Safety Health Env'},
-  {key:'HR',icon:'👥',label:'Human Resources'}
+  {key:'GA',icon:'',label:'General Affairs'},
+  {key:'SHE',icon:'',label:'Safety Health Env'},
+  {key:'HR',icon:'',label:'Human Resources'}
 ];
 
 db.ref('.info/connected').on('value',snap=>{
