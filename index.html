@@ -264,7 +264,7 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
       <div class="ftab on" onclick="setFilter('active',this)">งานปัจจุบัน</div>
       <div class="ftab" onclick="setFilter('รอดำเนินการ',this)">กำลังดำเนินการ</div>
       <div class="ftab" onclick="setFilter('กำลังดำเนินการ',this)">กำลังรายงาน</div>
-      <div class="ftab hist" id="tab-hist" onclick="setFilter('done',this)">📁 ประวัติ <span class="hist-badge" id="hist-count" style="display:none">0</span></div>
+      <div class="ftab hist" id="tab-hist" onclick="setFilter('done',this)">ประวัติ<span class="hist-badge" id="hist-count" style="display:none">0</span></div>
     </div>
     <div class="items" id="list">
       <div class="loading">⏳ กำลังเชื่อมต่อ Firebase...</div>
@@ -283,8 +283,8 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
       <div style="margin-bottom:14px;"><span id="d-assignee" style="background:#E3F2FD;color:#1565C0;border-radius:99px;padding:3px 12px;font-size:13px;font-weight:600;"></span></div>
       <div class="sec-label">Status (เลือกได้ทางเดียว ไม่สามารถย้อนกลับได้)</div>
       <div class="status-tabs">
-        <div class="stab sw" onclick="changeStatus('รอดำเนินการ',this)">⏳ รอดำเนินการ</div>
-        <div class="stab sd" onclick="changeStatus('กำลังดำเนินการ',this)">🔄 กำลังดำเนินการ</div>
+        <div class="stab sw" onclick="changeStatus('รอดำเนินการ',this)">กำลังดำเนินการ</div>
+        <div class="stab sd" onclick="changeStatus('กำลังดำเนินการ',this)"> รอรายงาน</div>
         <div class="stab sdn" onclick="changeStatus('เสร็จแล้ว',this)">✅ เสร็จแล้ว</div>
       </div>
     </div>
@@ -398,7 +398,7 @@ function openDetail(id) {
   document.getElementById('d-note').value = '';
 
   // one-way status: รอ → กำลัง → เสร็จ ย้อนกลับไม่ได้
-  const statusOrder = ['รอดำเนินการ','กำลังดำเนินการ','เสร็จแล้ว'];
+  const statusOrder = ['กำลังดำเนินการ','รอรายงาน','เสร็จแล้ว'];
   const curIdx = statusOrder.indexOf(it.status);
   document.querySelectorAll('.stab').forEach((t,i) => {
     t.classList.remove('on','disabled-tab');
@@ -429,7 +429,7 @@ function goBack() {
 function changeStatus(ns, el) {
   const it = items[activeId];
   if (!it || ns === it.status) return;
-  const statusOrder = ['รอดำเนินการ','กำลังดำเนินการ','เสร็จแล้ว'];
+  const statusOrder = ['กำลังดำเนินการ','รอรายงาน','เสร็จแล้ว'];
   if (statusOrder.indexOf(ns) < statusOrder.indexOf(it.status)) return; // กันย้อนหลัง
   const ts = Date.now();
   const log = { id: ts, type: 'status', text: it.status + ' → ' + ns, time: nowStr(), ts };
@@ -482,8 +482,8 @@ function render() {
   const done = arr.filter(i => i.status === 'เสร็จแล้ว');
 
   document.getElementById('s-all').textContent = active.length;
-  document.getElementById('s-w').textContent = arr.filter(i => i.status === 'รอดำเนินการ').length;
-  document.getElementById('s-d').textContent = arr.filter(i => i.status === 'กำลังดำเนินการ').length;
+  document.getElementById('s-w').textContent = arr.filter(i => i.status === 'กำลังดำเนินการ').length;
+  document.getElementById('s-d').textContent = arr.filter(i => i.status === 'รอรายงาน').length;
   document.getElementById('s-dn').textContent = done.length;
 
   const hc = document.getElementById('hist-count');
