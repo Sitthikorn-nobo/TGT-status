@@ -46,14 +46,16 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
 .overview-wrap{max-width:680px;margin:0 auto;padding:20px 16px;width:100%;}
 .add-box{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:16px;margin-bottom:18px;box-shadow:var(--shadow);}
 .add-box-title{font-size:12px;font-weight:600;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px;}
-.add-row{display:flex;gap:8px;margin-bottom:8px;}
-.add-row:last-child{margin-bottom:0;}
-.add-input{flex:1;background:#F0F7FF;border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;font-size:14px;color:var(--text);outline:none;transition:border-color .2s;}
+
+/* แก้ไขปุ่มล้นในมือถือ */
+.add-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.add-input{flex:1;min-width:140px;background:#F0F7FF;border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;font-size:14px;color:var(--text);outline:none;transition:border-color .2s;}
 .add-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,101,192,0.08);}
 .add-input::placeholder{color:var(--text3);}
-.btn-add{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 22px;font-size:14px;font-weight:500;white-space:nowrap;transition:all .2s;box-shadow:0 2px 8px rgba(21,101,192,0.2);}
+.btn-add{flex:1;min-width:80px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 22px;font-size:14px;font-weight:500;white-space:nowrap;transition:all .2s;box-shadow:0 2px 8px rgba(21,101,192,0.2);}
 .btn-add:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(21,101,192,0.3);}
 .btn-add:disabled{background:#90A4AE;cursor:not-allowed;transform:none;box-shadow:none;}
+
 .total-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:18px;}
 .tstat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 10px;text-align:center;box-shadow:var(--shadow);}
 .tstat-num{font-family:'Kanit',sans-serif;font-size:22px;font-weight:600;}
@@ -135,7 +137,7 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
 .detail-title{font-family:'Kanit',sans-serif;font-size:20px;font-weight:600;margin-bottom:14px;color:var(--text);}
 .detail-meta{display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
 
-/* Stepper Progress Styles (MODIFIED) */
+/* Stepper Progress Styles - ปรับเอาเว้นซ้ายขวาออก */
 .stepper-wrapper {
   display: flex;
   justify-content: space-between;
@@ -143,13 +145,13 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
   position: relative;
   padding: 0;
 }
-/* เส้นสีเทาด้านหลัง */
+/* เส้นสีเทาด้านหลัง - ปรับตำแหน่งเริ่มกึ่งกลางวงแรกถึงวงสุดท้าย */
 .stepper-wrapper::after {
   content: "";
   position: absolute;
   top: 16px;
-  left: 0;
-  width: 100%;
+  left: 17px; 
+  right: 17px;
   height: 4px;
   background: #E0E0E0;
   z-index: 0;
@@ -160,13 +162,14 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
   content: "";
   position: absolute;
   top: 16px;
-  left: 0;
+  left: 17px;
   width: var(--progress-width, 0%);
   height: 4px;
   background: #43A047;
   z-index: 1;
   border-radius: 4px;
   transition: width 0.5s ease-in-out;
+  max-width: calc(100% - 34px);
 }
 
 .stepper-item {
@@ -487,14 +490,14 @@ function openDetail(id){
   document.getElementById('detail-header').style.borderTopColor=it.dept==='GA'?'var(--ga)':it.dept==='SHE'?'var(--she)':'var(--hr)';
   document.getElementById('d-note').value='';
 
+  // Update Status Dropdown & Stepper
   const statusSelect = document.getElementById('d-status-select');
   statusSelect.value = it.status;
   
   const statusOrder=['กำลังดำเนินการ','รอรายงาน','เสร็จแล้ว'];
   const curIdx=statusOrder.indexOf(it.status);
 
-  // Stepper UI & Progress Line Logic
-  const stepperWrapper = document.querySelector('.stepper-wrapper');
+  // Stepper logic - ปรับระบายสีและเส้น
   statusOrder.forEach((s, i) => {
     const step = document.getElementById(`step-${i+1}`);
     step.classList.remove('active', 'completed');
@@ -502,11 +505,14 @@ function openDetail(id){
     else if (i === curIdx) step.classList.add('active');
   });
 
-  // คำนวณความยาวเส้นสีเขียว (0%, 50%, 100%)
+  // คำนวณความยาวเส้นสีเขียว (0%, 50%, 100%) อ้างอิงจากระยะวงกลม
+  const stepperWrapper = document.querySelector('.stepper-wrapper');
   const pWidth = curIdx === 0 ? 0 : curIdx === 1 ? 50 : 100;
   stepperWrapper.style.setProperty('--progress-width', pWidth + '%');
 
+  // Lock logic
   statusSelect.disabled = (it.status === 'เสร็จแล้ว');
+
   document.getElementById('note-box').style.display=it.status==='เสร็จแล้ว'?'none':'block';
   renderTimeline(it);showPage('page-detail');
 }
@@ -516,9 +522,19 @@ function goBackFromDetail(){activeId=null;showPage('page-dept');}
 function changeStatus(ns){
   const it=items[activeId];
   if(!it || ns===it.status) return;
+
+  // เพิ่มแจ้งเตือนกดยืนยันเฉพาะตอนกด "เสร็จแล้ว"
+  if(ns === 'เสร็จแล้ว') {
+    if(!confirm("⚠️ คุณต้องการยืนยันว่างานนี้ 'เสร็จแล้ว' ใช่หรือไม่?\n(เมื่อเสร็จแล้วจะไม่สามารถแก้ไขได้อีก)")) {
+      document.getElementById('d-status-select').value = it.status;
+      return;
+    }
+  }
+
   const ts=Date.now();
   itemsRef.child(activeId).update({
-    status:ns, updated:nowStr(),
+    status:ns,
+    updated:nowStr(),
     ['logs/'+ts]:{id:ts,type:'status',text:it.status+' → '+ns,time:nowStr(),ts}
   }).then(()=>{
     if(ns==='เสร็จแล้ว'){
