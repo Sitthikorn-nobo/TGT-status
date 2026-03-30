@@ -150,6 +150,7 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
   content: "";
   position: absolute;
   top: 16px;
+  /* แก้ไขจาก 0 เป็น 17px (เพื่อให้เริ่มที่จุดกึ่งกลางวงกลมเลข 1 พอดี) */
   left: 17px; 
   right: 17px;
   height: 4px;
@@ -157,19 +158,22 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
   z-index: 0;
   border-radius: 4px;
 }
-/* เส้นสีเขียวที่วิ่งตามสถานะ */
+
+/* เส้นสีเขียว (Progress) */
 .stepper-wrapper::before {
   content: "";
   position: absolute;
   top: 16px;
-  left: 17px;
+  /* แก้ไขจาก 0 เป็น 17px */
+  left: 17px; 
   width: var(--progress-width, 0%);
   height: 4px;
   background: #43A047;
   z-index: 1;
   border-radius: 4px;
   transition: width 0.5s ease-in-out;
-  max-width: calc(100% - 34px);
+  /* เพิ่มคำสั่งนี้เพื่อไม่ให้เส้นเขียววิ่งทะลุวงกลมสุดท้าย */
+  max-width: calc(100% - 34px); 
 }
 
 .stepper-item {
