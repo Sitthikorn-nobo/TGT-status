@@ -260,15 +260,12 @@ input,textarea,select{font-family:'Sarabun',sans-serif;}
       <div class="stat"><div class="stat-num" id="s-d" style="color:#1565C0">0</div><div class="stat-label">รอรายงาน</div></div>
       <div class="stat"><div class="stat-num" id="s-dn" style="color:#2E7D32">0</div><div class="stat-label">เสร็จแล้ว</div></div>
     </div>
-   <div class="filters">
-  <div class="ftab on" onclick="setFilter('active', this)">งานทั้งหมด</div>
-  
-  <div class="ftab" onclick="setDeptFilter('GA', this)">🏢 GA</div>
-  <div class="ftab" onclick="setDeptFilter('SHE', this)">🛡️ SHE</div>
-  <div class="ftab" onclick="setDeptFilter('HR', this)">👥 HR</div>
-  
-  <div class="ftab hist" onclick="setFilter('done', this)">📁 ประวัติ</div>
-</div>
+    <div class="filters">
+      <div class="ftab on" onclick="setFilter('active',this)">งานปัจจุบัน</div>
+      <div class="ftab" onclick="setFilter('กำลังดำเนินการ',this)">กำลังดำเนินการ</div>
+      <div class="ftab" onclick="setFilter('รอรายงาน',this)">กำลังรายงาน</div>
+      <div class="ftab hist" id="tab-hist" onclick="setFilter('done',this)">ประวัติ<span class="hist-badge" id="hist-count" style="display:none">0</span></div>
+    </div>
 
     <input class="add-input" style="max-width:300px;" type="text" id="inp-assign" placeholder="👤 ผู้รับผิดชอบ"/>
 
